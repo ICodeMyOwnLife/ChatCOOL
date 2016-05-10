@@ -1,4 +1,4 @@
-﻿namespace ChatClient
+﻿namespace ChatServer
 {
     public partial class MainWindow
     {

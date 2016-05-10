@@ -6,7 +6,51 @@
         xmlns:local="clr-namespace:ChatClient"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
+
+    <Window.DataContext>
+        <local:ChatClientViewModel />
+    </Window.DataContext>
+
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Server URI:"
+                   Style="{StaticResource TextBlock.Label}" />
+
+        <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
+                 Text="{Binding ServerUri, UpdateSourceTrigger=PropertyChanged}" />
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="User Name:"
+                   Style="{StaticResource TextBlock.Label}" />
+
+        <TextBox Grid.Row="1" Grid.Column="1"
+                 Text="{Binding UserName, UpdateSourceTrigger=PropertyChanged}" />
+
+        <Button Grid.Row="1" Grid.Column="2" Content="Connect"
+                Command="{Binding ConnectServerAsyncCommand}" />
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Message:"
+                   Style="{StaticResource TextBlock.Label}" />
+
+        <TextBox Grid.Row="2" Grid.Column="1"
+                 Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}" />
+
+        <Button Grid.Row="2" Grid.Column="2" Content="Send"
+                Command="{Binding SendMessageAsyncCommand}" />
+
+        <TextBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
+                 Text="{Binding State, Mode=OneWay}"
+                 Style="{StaticResource TextBox.Log}" />
     </Grid>
 </Window>

@@ -9,11 +9,6 @@
         mc:Ignorable="d"
         Title="Chat Server" Height="450" Width="400">
 
-    <Window.Resources>
-        <xaml:TextBoxEnterToClickBehavior x:Key="EnterToConnectServer"
-                                          Target="{Binding ElementName=cmdConnectServer}" />
-    </Window.Resources>
-
     <Window.DataContext>
         <local:ChatServerViewModel />
     </Window.DataContext>

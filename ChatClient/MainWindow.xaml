@@ -9,14 +9,6 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
 
-    <Window.Resources>
-        <xaml:EnterToClickBehavior x:Key="EnterToConnect" x:Shared="False"
-                                   Target="{Binding ElementName=cmdConnect}" />
-
-        <xaml:EnterToClickBehavior x:Key="EnterToSendMessage" x:Shared="False"
-                                   Target="{Binding ElementName=cmdSendMessage}" />
-    </Window.Resources>
-
     <Window.DataContext>
         <local:ChatClientViewModel />
     </Window.DataContext>
@@ -42,7 +34,7 @@
                  Text="{Binding ServerUri, UpdateSourceTrigger=PropertyChanged}"
                  IsEnabled="{Binding IsConnected, Converter={StaticResource BooleanNotConverter}}">
             <i:Interaction.Behaviors>
-                <StaticResource ResourceKey="EnterToConnect" />
+                <xaml:TextBoxEnterToClickBehavior Target="{x:Reference cmdConnect}" />
             </i:Interaction.Behaviors>
         </TextBox>
 
@@ -53,7 +45,7 @@
                  Text="{Binding UserName, UpdateSourceTrigger=PropertyChanged}"
                  IsEnabled="{Binding IsConnected, Converter={StaticResource BooleanNotConverter}}">
             <i:Interaction.Behaviors>
-                <StaticResource ResourceKey="EnterToConnect" />
+                <xaml:TextBoxEnterToClickBehavior Target="{x:Reference cmdConnect}" />
             </i:Interaction.Behaviors>
         </TextBox>
 
@@ -72,7 +64,7 @@
                  Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}"
                  IsEnabled="{Binding IsConnected}">
             <i:Interaction.Behaviors>
-                <StaticResource ResourceKey="EnterToSendMessage" />
+                <xaml:TextBoxEnterToClickBehavior Target="{x:Reference cmdSendMessage}" />
             </i:Interaction.Behaviors>
         </TextBox>
 

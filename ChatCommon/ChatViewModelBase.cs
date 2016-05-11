@@ -4,7 +4,7 @@ using CB.Model.Common;
 
 namespace ChatCommon
 {
-    public class ChatViewModelBase: ViewModelBase
+    public class ChatViewModelBase: ViewModelBase, ILog
     {
         #region Fields
         private string _serverUri = ChatConfig.ChatServerUri;
@@ -20,8 +20,8 @@ namespace ChatCommon
         #endregion
 
 
-        #region Implementation
-        protected void Log(string log) => State = State == null ? log : State + Environment.NewLine + log;
+        #region Methods
+        public void Log(string log) => State = State == null ? log : State + Environment.NewLine + log;
         #endregion
     }
 }

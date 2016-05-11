@@ -1,4 +1,6 @@
 ﻿using System.Threading.Tasks;
+using System.Windows;
+using ChatCommon;
 using Microsoft.AspNet.SignalR;
 
 
@@ -12,6 +14,9 @@ namespace ChatServer
             Clients.All.ShowMessage(userName, message);
         }
         #endregion
+
+        private ILog GetLogger()
+            => Application.Current.MainWindow.DataContext as ILog;
     }
 }
 

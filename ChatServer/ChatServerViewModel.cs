@@ -10,8 +10,6 @@ namespace ChatServer
     public class ChatServerViewModel: ChatViewModelBase
     {
         #region Fields
-        private bool _canStartServer = true;
-        private bool _canStopServer;
         private IDisposable _signalR;
         private ICommand _startServerAsyncCommand;
         private ICommand _startServerCommand;
@@ -20,17 +18,8 @@ namespace ChatServer
 
 
         #region  Properties & Indexers
-        public bool CanStartServer
-        {
-            get { return _canStartServer; }
-            private set { SetProperty(ref _canStartServer, value); }
-        }
-
-        public bool CanStopServer
-        {
-            get { return _canStopServer; }
-            private set { SetProperty(ref _canStopServer, value); }
-        }
+        public bool CanStartServer => !IsConnected && ChatConfig.IsValidServerUri(ServerUri);
+        public bool CanStopServer => IsConnected;
 
         public ICommand StartServerAsyncCommand
             => GetCommand(ref _startServerAsyncCommand, async _ => await StartServerAsync(), _ => CanStartServer);
@@ -45,7 +34,7 @@ namespace ChatServer
         #region Methods
         public void StartServer()
         {
-            if (_signalR != null)
+            if (IsConnected)
             {
                 Log("Server is running");
                 return;
@@ -55,9 +44,9 @@ namespace ChatServer
             {
                 Log("Starting server...");
                 _signalR = WebApp.Start(ServerUri);
-                CanStartServer = false;
-                CanStopServer = true;
                 Log($"Server is started at {ServerUri}.");
+                IsConnected = true;
+                UpdateEnabilities();
             }
             catch (Exception exception)
             {
@@ -69,7 +58,7 @@ namespace ChatServer
 
         public void StopServer()
         {
-            if (_signalR == null)
+            if (!IsConnected)
             {
                 Log("Server is not running.");
                 return;
@@ -77,9 +66,18 @@ namespace ChatServer
 
             _signalR.Dispose();
             _signalR = null;
-            CanStartServer = true;
-            CanStopServer = false;
+            IsConnected = false;
+            UpdateEnabilities();
             Log("Server is stopped.");
+        }
+        #endregion
+
+
+        #region Override
+        protected override void UpdateEnabilities()
+        {
+            NotifyPropertyChanged(nameof(CanStartServer));
+            NotifyPropertyChanged(nameof(CanStopServer));
         }
         #endregion
     }

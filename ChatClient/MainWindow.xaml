@@ -4,8 +4,18 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChatClient"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:xaml="http://wpf.cb.com/xaml"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
+
+    <Window.Resources>
+        <xaml:EnterToClickBehavior x:Key="EnterToConnect" x:Shared="False"
+                                   Target="{Binding ElementName=cmdConnect}" />
+
+        <xaml:EnterToClickBehavior x:Key="EnterToSendMessage" x:Shared="False"
+                                   Target="{Binding ElementName=cmdSendMessage}" />
+    </Window.Resources>
 
     <Window.DataContext>
         <local:ChatClientViewModel />
@@ -29,24 +39,44 @@
                    Style="{StaticResource TextBlock.Label}" />
 
         <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
-                 Text="{Binding ServerUri, UpdateSourceTrigger=PropertyChanged}" />
+                 Text="{Binding ServerUri, UpdateSourceTrigger=PropertyChanged}"
+                 IsEnabled="{Binding IsConnected, Converter={StaticResource BooleanNotConverter}}">
+            <i:Interaction.Behaviors>
+                <StaticResource ResourceKey="EnterToConnect" />
+            </i:Interaction.Behaviors>
+        </TextBox>
 
         <TextBlock Grid.Row="1" Grid.Column="0" Text="User Name:"
                    Style="{StaticResource TextBlock.Label}" />
 
         <TextBox Grid.Row="1" Grid.Column="1"
-                 Text="{Binding UserName, UpdateSourceTrigger=PropertyChanged}" />
+                 Text="{Binding UserName, UpdateSourceTrigger=PropertyChanged}"
+                 IsEnabled="{Binding IsConnected, Converter={StaticResource BooleanNotConverter}}">
+            <i:Interaction.Behaviors>
+                <StaticResource ResourceKey="EnterToConnect" />
+            </i:Interaction.Behaviors>
+        </TextBox>
 
-        <Button Grid.Row="1" Grid.Column="2" Content="Connect"
-                Command="{Binding ConnectServerAsyncCommand}" />
+        <Button x:Name="cmdConnect" Grid.Row="1" Grid.Column="2" Content="Connect"
+                Command="{Binding ConnectServerAsyncCommand}"
+                Visibility="{Binding IsConnected, Converter={StaticResource InvisibilityConverter}}" />
+
+        <Button Grid.Row="1" Grid.Column="2" Content="Disconnect"
+                Command="{Binding DisconnectServerCommand}"
+                Visibility="{Binding IsConnected, Converter={StaticResource VisibilityConverter}}" />
 
         <TextBlock Grid.Row="2" Grid.Column="0" Text="Message:"
                    Style="{StaticResource TextBlock.Label}" />
 
         <TextBox Grid.Row="2" Grid.Column="1"
-                 Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}" />
+                 Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}"
+                 IsEnabled="{Binding IsConnected}">
+            <i:Interaction.Behaviors>
+                <StaticResource ResourceKey="EnterToSendMessage" />
+            </i:Interaction.Behaviors>
+        </TextBox>
 
-        <Button Grid.Row="2" Grid.Column="2" Content="Send"
+        <Button x:Name="cmdSendMessage" Grid.Row="2" Grid.Column="2" Content="Send"
                 Command="{Binding SendMessageAsyncCommand}" />
 
         <TextBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"

@@ -4,8 +4,15 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChatServer"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:xaml="http://wpf.cb.com/xaml"
         mc:Ignorable="d"
         Title="Chat Server" Height="450" Width="400">
+
+    <Window.Resources>
+        <xaml:TextBoxEnterToClickBehavior x:Key="EnterToConnectServer"
+                                          Target="{Binding ElementName=cmdConnectServer}" />
+    </Window.Resources>
 
     <Window.DataContext>
         <local:ChatServerViewModel />
@@ -24,18 +31,23 @@
         </Grid.ColumnDefinitions>
 
         <TextBlock Grid.Row="0" Grid.Column="0" Text="Server URI:"
-                   Style="{StaticResource TextBlock.Label}"/>
+                   Style="{StaticResource TextBlock.Label}" />
 
         <TextBox Grid.Row="0" Grid.Column="1"
                  Text="{Binding ServerUri, UpdateSourceTrigger=PropertyChanged}"
-                 IsEnabled="{Binding CanStartServer}" />
+                 IsEnabled="{Binding IsConnected, Converter={StaticResource BooleanNotConverter}}">
+            <i:Interaction.Behaviors>
+                <!--<StaticResource ResourceKey="EnterToConnectServer" />-->
+                <xaml:TextBoxEnterToClickBehavior Target="{x:Reference cmdConnectServer}" />
+            </i:Interaction.Behaviors>
+        </TextBox>
 
         <Button Grid.Row="0" Grid.Column="2" Content="Stop Service"
-                Visibility="{Binding CanStopServer, Converter={StaticResource VisibilityConverter}}"
+                Visibility="{Binding IsConnected, Converter={StaticResource VisibilityConverter}}"
                 Command="{Binding StopServerCommand}" />
 
-        <Button Grid.Row="0" Grid.Column="2" Content="Start Service"
-                Visibility="{Binding CanStartServer, Converter={StaticResource VisibilityConverter}}"
+        <Button x:Name="cmdConnectServer" Grid.Row="0" Grid.Column="2" Content="Start Service"
+                Visibility="{Binding IsConnected, Converter={StaticResource InvisibilityConverter}}"
                 Command="{Binding StartServerAsyncCommand}" />
 
         <TextBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"

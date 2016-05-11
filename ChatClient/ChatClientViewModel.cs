@@ -10,9 +10,8 @@ namespace ChatClient
     public class ChatClientViewModel: ChatViewModelBase
     {
         #region Fields
-        private bool _canConnectServer = true;
-        private bool _canSendMessage = true;
         private ICommand _connectServerAsyncCommand;
+        private ICommand _disconnectServerCommand;
         private HubConnection _hubConnection;
         private IHubProxy _hubProxy;
         private string _message;
@@ -23,24 +22,29 @@ namespace ChatClient
 
         #region  Properties & Indexers
         public bool CanConnectServer
-        {
-            get { return _canConnectServer; }
-            private set { SetProperty(ref _canConnectServer, value); }
-        }
+            => !string.IsNullOrEmpty(UserName) && ChatConfig.IsValidServerUri(ServerUri) && !IsConnected;
+
+        public bool CanDisconnectServer => IsConnected;
 
         public bool CanSendMessage
-        {
-            get { return _canSendMessage; }
-            private set { SetProperty(ref _canSendMessage, value); }
-        }
+            => !string.IsNullOrEmpty(Message) && IsConnected;
 
         public ICommand ConnectServerAsyncCommand
             => GetCommand(ref _connectServerAsyncCommand, async _ => await ConnectServerAsync(), _ => CanConnectServer);
 
+        public ICommand DisconnectServerCommand
+            => GetCommand(ref _disconnectServerCommand, _ => DisconnectServer(), _ => CanDisconnectServer);
+
         public string Message
         {
             get { return _message; }
-            set { SetProperty(ref _message, value); }
+            set
+            {
+                if (SetProperty(ref _message, value))
+                {
+                    UpdateEnabilities();
+                }
+            }
         }
 
         public ICommand SendMessageAsyncCommand
@@ -49,7 +53,13 @@ namespace ChatClient
         public string UserName
         {
             get { return _userName; }
-            set { SetProperty(ref _userName, value); }
+            set
+            {
+                if (SetProperty(ref _userName, value))
+                {
+                    UpdateEnabilities();
+                }
+            }
         }
         #endregion
 
@@ -57,14 +67,23 @@ namespace ChatClient
         #region Methods
         public async Task ConnectServerAsync()
         {
+            if (IsConnected)
+            {
+                Log("This client is connected to server.");
+                return;
+            }
+
             _hubConnection = new HubConnection(ServerUri);
-            _hubConnection.Closed += HubConnection_Closed;
+            _hubConnection.StateChanged += HubConnection_StateChanged;
+            _hubConnection.Error += HubConnection_Error;
             _hubProxy = _hubConnection.CreateHubProxy("ChatHub");
             _hubProxy.On<string, string>("ShowMessage", (userName, message) => Log($"{userName}: {message}"));
 
             try
             {
                 await _hubConnection.Start();
+                IsConnected = true;
+                UpdateEnabilities();
             }
             catch (Exception exception)
             {
@@ -72,23 +91,75 @@ namespace ChatClient
             }
         }
 
+        public void DisconnectServer()
+        {
+            if (!IsConnected)
+            {
+                Log("Client is not connected to server.");
+                return;
+            }
+
+            _hubConnection.Stop();
+            IsConnected = false;
+            UpdateEnabilities();
+        }
+
         public async Task SendMessageAsync()
         {
+            if (!CanSendMessage) return;
+
             await _hubProxy.Invoke("SendMessage", UserName, Message);
+            Message = "";
+            UpdateEnabilities();
+        }
+        #endregion
+
+
+        #region Override
+        protected override void UpdateEnabilities()
+        {
+            NotifyPropertyChanged(nameof(CanConnectServer));
+            NotifyPropertyChanged(nameof(CanDisconnectServer));
+            NotifyPropertyChanged(nameof(CanSendMessage));
         }
         #endregion
 
 
         #region Event Handlers
-        private void HubConnection_Closed()
+        private void HubConnection_Error(Exception exception)
         {
-            throw new NotImplementedException();
+            Log(exception.Message);
+        }
+
+        private void HubConnection_StateChanged(StateChange stateChange)
+        {
+            string msg;
+            switch (stateChange.NewState)
+            {
+                case ConnectionState.Connecting:
+                    msg = "Connecting...";
+                    break;
+                case ConnectionState.Connected:
+                    msg = $"Connected to {ServerUri}";
+                    break;
+                case ConnectionState.Reconnecting:
+                    msg = "Reconnecting...";
+                    break;
+                case ConnectionState.Disconnected:
+                    msg = "Disconnected";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            Log(msg);
         }
         #endregion
     }
 }
 
-// TODO: Implement CanConnectServer, CanSendMessage
+
+// TODO: Test CanConnectServer, CanSendMessage
+// TODO: EnterToClick
 // TODO: Log Connection success, Connection closed
 // TODO: Chat with specific user?
 // TODO: Delete Message after sending

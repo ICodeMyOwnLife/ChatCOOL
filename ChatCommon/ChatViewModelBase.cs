@@ -4,18 +4,30 @@ using CB.Model.Common;
 
 namespace ChatCommon
 {
-    public class ChatViewModelBase: ViewModelBase, ILog
+    public abstract class ChatViewModelBase: ViewModelBase, ILog
     {
         #region Fields
+        private bool _isConnected;
         private string _serverUri = ChatConfig.ChatServerUri;
         #endregion
 
 
+        #region Abstract
+        protected abstract void UpdateEnabilities();
+        #endregion
+
+
         #region  Properties & Indexers
-        public string ServerUri
+        public virtual bool IsConnected
+        {
+            get { return _isConnected; }
+            protected set { SetProperty(ref _isConnected, value); }
+        }
+
+        public virtual string ServerUri
         {
             get { return _serverUri; }
-            set { SetProperty(ref _serverUri, value); }
+            set { if (SetProperty(ref _serverUri, value)) UpdateEnabilities(); }
         }
         #endregion
 

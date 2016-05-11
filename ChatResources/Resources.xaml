@@ -4,7 +4,15 @@
 
     <Thickness x:Key="NormalMargin">8</Thickness>
 
-    <BooleanToVisibilityConverter x:Key="VisibilityConverter" />
+    <xaml:BooleanNotConverter x:Key="BooleanNotConverter" />
+
+    <xaml:BooleanToValueConverter x:Key="VisibilityConverter"
+                                  ValueIfTrue="{x:Static Visibility.Visible}"
+                                  ValueIfFalse="{x:Static Visibility.Hidden}" />
+
+    <xaml:BooleanToValueConverter x:Key="InvisibilityConverter"
+                                  ValueIfFalse="{x:Static Visibility.Visible}"
+                                  ValueIfTrue="{x:Static Visibility.Hidden}" />
 
     <xaml:ScrollWhenTextChangedBehavior x:Key="ScrollToEndBehavior" x:Shared="False" ScrollPosition="ScrollToEnd" />
 

@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using ChatCommon;
 using Microsoft.AspNet.SignalR;
@@ -9,6 +11,7 @@ namespace ChatServer
     public class ChatHub: Hub
     {
         #region Fields
+        private static readonly IList<ChatAccount> _accounts = new List<ChatAccount>();
         private ILog _logger;
         #endregion
 
@@ -22,9 +25,26 @@ namespace ChatServer
 
 
         #region Methods
-        public void SendMessage(string userName, string message)
+        public void LogIn(string userName)
         {
-            Clients.All.ShowMessage(userName, message);
+            var clientId = Context.ConnectionId;
+            var account = _accounts.SingleOrDefault(a => a.Id == clientId);
+            if (account == null)
+            {
+                _accounts.Add(new ChatAccount { Id = clientId, UserName = userName });
+            }
+            else
+            {
+                account.UserName = userName;
+            }
+            SendId(clientId);
+            SendAccounts();
+        }
+
+        public void SendMessage(string receiveId, string message)
+        {
+            var sendName = _accounts.SingleOrDefault(a => a.Id == Context.ConnectionId)?.UserName;
+            Clients.Client(receiveId).ShowMessage(sendName, message);
         }
         #endregion
 
@@ -46,6 +66,19 @@ namespace ChatServer
         {
             _logger?.Log($"Client reconnected: {Context.ConnectionId}");
             return base.OnReconnected();
+        }
+        #endregion
+
+
+        #region Implementation
+        private void SendAccounts()
+        {
+            Clients.All.ReceiveAccounts(_accounts);
+        }
+
+        private void SendId(string clientId)
+        {
+            Clients.Client(clientId).ReceiveId(clientId);
         }
         #endregion
     }

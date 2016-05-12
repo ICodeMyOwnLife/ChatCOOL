@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using ChatCommon;
@@ -10,30 +12,40 @@ namespace ChatClient
     public class ChatClientViewModel: ChatViewModelBase
     {
         #region Fields
+        private ChatAccount[] _accounts;
+        private string _clientId;
         private ICommand _connectServerAsyncCommand;
         private ICommand _disconnectServerCommand;
         private HubConnection _hubConnection;
         private IHubProxy _hubProxy;
         private string _message;
+        private ChatAccount _selectedAccount;
         private ICommand _sendMessageAsyncCommand;
         private string _userName;
         #endregion
 
 
         #region  Properties & Indexers
-        public bool CanConnectServer
-            => !string.IsNullOrEmpty(UserName) && ChatConfig.IsValidServerUri(ServerUri) && !IsConnected;
+        public ChatAccount[] Accounts
+        {
+            get { return _accounts; }
+            private set { SetProperty(ref _accounts, value); }
+        }
 
-        public bool CanDisconnectServer => IsConnected;
+        public override bool CanConnect
+            => !string.IsNullOrEmpty(UserName) && ChatConfig.IsValidServerUri(ServerUri) &&
+               ChatConnectionState == ChatConnectionState.Closed;
+
+        public override bool CanDisconnect => ChatConnectionState == ChatConnectionState.Connected;
 
         public bool CanSendMessage
-            => !string.IsNullOrEmpty(Message) && IsConnected;
+            => !string.IsNullOrEmpty(Message) && SelectedAccount != null && ChatConnectionState == ChatConnectionState.Connected;
 
         public ICommand ConnectServerAsyncCommand
-            => GetCommand(ref _connectServerAsyncCommand, async _ => await ConnectServerAsync(), _ => CanConnectServer);
+            => GetCommand(ref _connectServerAsyncCommand, async _ => await ConnectServerAsync(), _ => CanConnect);
 
         public ICommand DisconnectServerCommand
-            => GetCommand(ref _disconnectServerCommand, _ => DisconnectServer(), _ => CanDisconnectServer);
+            => GetCommand(ref _disconnectServerCommand, _ => DisconnectServer(), _ => CanDisconnect);
 
         public string Message
         {
@@ -45,6 +57,12 @@ namespace ChatClient
                     UpdateEnabilities();
                 }
             }
+        }
+
+        public ChatAccount SelectedAccount
+        {
+            get { return _selectedAccount; }
+            set { SetProperty(ref _selectedAccount, value); }
         }
 
         public ICommand SendMessageAsyncCommand
@@ -67,40 +85,38 @@ namespace ChatClient
         #region Methods
         public async Task ConnectServerAsync()
         {
-            if (IsConnected)
+            if (ChatConnectionState != ChatConnectionState.Closed)
             {
-                Log("This client is connected to server.");
+                Log($"Cannot connect whie this client is {ChatConnectionState.ToString().ToLower()}.");
                 return;
             }
 
-            _hubConnection = new HubConnection(ServerUri);
-            _hubConnection.StateChanged += HubConnection_StateChanged;
-            _hubConnection.Error += HubConnection_Error;
-            _hubProxy = _hubConnection.CreateHubProxy("ChatHub");
-            _hubProxy.On<string, string>("ShowMessage", (userName, message) => Log($"{userName}: {message}"));
+            ChatConnectionState = ChatConnectionState.Connecting;
+            InitializeConnection();
 
             try
             {
                 await _hubConnection.Start();
-                IsConnected = true;
-                UpdateEnabilities();
+                await _hubProxy.Invoke("LogIn", UserName);
+                ChatConnectionState = ChatConnectionState.Connected;
             }
             catch (Exception exception)
             {
                 Log(exception.Message);
+                ChatConnectionState = ChatConnectionState.Closed;
             }
         }
 
         public void DisconnectServer()
         {
-            if (!IsConnected)
+            if (ChatConnectionState != ChatConnectionState.Connected)
             {
-                Log("Client is not connected to server.");
+                Log($"Cannot disconnect when the client is {ChatConnectionState.ToString().ToLower()}.");
                 return;
             }
 
             _hubConnection.Stop();
-            IsConnected = false;
+            ChatConnectionState = ChatConnectionState.Closed;
             UpdateEnabilities();
         }
 
@@ -108,7 +124,7 @@ namespace ChatClient
         {
             if (!CanSendMessage) return;
 
-            await _hubProxy.Invoke("SendMessage", UserName, Message);
+            await _hubProxy.Invoke("SendMessage", SelectedAccount.Id, Message);
             Message = "";
             UpdateEnabilities();
         }
@@ -118,8 +134,7 @@ namespace ChatClient
         #region Override
         protected override void UpdateEnabilities()
         {
-            NotifyPropertyChanged(nameof(CanConnectServer));
-            NotifyPropertyChanged(nameof(CanDisconnectServer));
+            base.UpdateEnabilities();
             NotifyPropertyChanged(nameof(CanSendMessage));
         }
         #endregion
@@ -154,6 +169,21 @@ namespace ChatClient
             Log(msg);
         }
         #endregion
+
+
+        #region Implementation
+        private void InitializeConnection()
+        {
+            _hubConnection = new HubConnection(ServerUri);
+            _hubConnection.StateChanged += HubConnection_StateChanged;
+            _hubConnection.Error += HubConnection_Error;
+            _hubProxy = _hubConnection.CreateHubProxy("ChatHub");
+            _hubProxy.On<string, string>("ShowMessage", (userName, message) => Log($"{userName}: {message}"));
+            _hubProxy.On<string>("ReceiveId", id => _clientId = id);
+            _hubProxy.On<IEnumerable<ChatAccount>>("ReceiveAccounts",
+                accounts => Accounts = accounts.Where(a => a.Id != _clientId).ToArray());
+        }
+        #endregion
     }
 }
 
@@ -163,3 +193,5 @@ namespace ChatClient
 // TODO: Log Connection success, Connection closed
 // TODO: Chat with specific user?
 // TODO: Delete Message after sending
+// TODO: Remove account when disconnected
+// TODO: Account.Except(thisAccount)

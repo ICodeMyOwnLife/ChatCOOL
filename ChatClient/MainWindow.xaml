@@ -9,6 +9,14 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
 
+    <Window.Resources>
+        <xaml:TextBoxEnterToClickBehavior x:Key="EnterToConnect" x:Shared="False"
+                                          Target="{Binding ElementName=cmdConnect}" />
+
+        <xaml:TextBoxEnterToClickBehavior x:Key="EnterToSendMessage" x:Shared="False"
+                                          Target="{Binding ElementName=cmdSendMessage}" />
+    </Window.Resources>
+
     <Window.DataContext>
         <local:ChatClientViewModel />
     </Window.DataContext>
@@ -32,9 +40,9 @@
 
         <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
                  Text="{Binding ServerUri, UpdateSourceTrigger=PropertyChanged}"
-                 IsEnabled="{Binding IsConnected, Converter={StaticResource BooleanNotConverter}}">
+                 IsEnabled="{Binding ChatConnectionState, Converter={StaticResource ConnectionStateToConnectEnability}}">
             <i:Interaction.Behaviors>
-                <xaml:TextBoxEnterToClickBehavior Target="{x:Reference cmdConnect}" />
+                <StaticResource ResourceKey="EnterToConnect" />
             </i:Interaction.Behaviors>
         </TextBox>
 
@@ -43,36 +51,49 @@
 
         <TextBox Grid.Row="1" Grid.Column="1"
                  Text="{Binding UserName, UpdateSourceTrigger=PropertyChanged}"
-                 IsEnabled="{Binding IsConnected, Converter={StaticResource BooleanNotConverter}}">
+                 IsEnabled="{Binding ChatConnectionState, Converter={StaticResource ConnectionStateToConnectEnability}}">
             <i:Interaction.Behaviors>
-                <xaml:TextBoxEnterToClickBehavior Target="{x:Reference cmdConnect}" />
+                <StaticResource ResourceKey="EnterToConnect" />
             </i:Interaction.Behaviors>
         </TextBox>
 
-        <Button x:Name="cmdConnect" Grid.Row="1" Grid.Column="2" Content="Connect"
-                Command="{Binding ConnectServerAsyncCommand}"
-                Visibility="{Binding IsConnected, Converter={StaticResource InvisibilityConverter}}" />
-
         <Button Grid.Row="1" Grid.Column="2" Content="Disconnect"
                 Command="{Binding DisconnectServerCommand}"
-                Visibility="{Binding IsConnected, Converter={StaticResource VisibilityConverter}}" />
+                Visibility="{Binding ChatConnectionState, Converter={StaticResource ConnectionStateToDisconnectVisibility}}" />
+
+        <Button x:Name="cmdConnect" Grid.Row="1" Grid.Column="2" Content="Connect"
+                Command="{Binding ConnectServerAsyncCommand}"
+                Visibility="{Binding ChatConnectionState, Converter={StaticResource ConnectionStateToConnectVisibility}}" />
 
         <TextBlock Grid.Row="2" Grid.Column="0" Text="Message:"
                    Style="{StaticResource TextBlock.Label}" />
 
         <TextBox Grid.Row="2" Grid.Column="1"
                  Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}"
-                 IsEnabled="{Binding IsConnected}">
+                 IsEnabled="{Binding ChatConnectionState, Converter={StaticResource ConnectionStateToSendMessageEnability}}">
             <i:Interaction.Behaviors>
-                <xaml:TextBoxEnterToClickBehavior Target="{x:Reference cmdSendMessage}" />
+                <StaticResource ResourceKey="EnterToSendMessage" />
             </i:Interaction.Behaviors>
         </TextBox>
 
         <Button x:Name="cmdSendMessage" Grid.Row="2" Grid.Column="2" Content="Send"
                 Command="{Binding SendMessageAsyncCommand}" />
 
-        <TextBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
-                 Text="{Binding State, Mode=OneWay}"
-                 Style="{StaticResource TextBox.Log}" />
+        <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <ListBox Grid.Column="0" DisplayMemberPath="UserName"
+                     ItemsSource="{Binding Accounts}"
+                     SelectedItem="{Binding SelectedAccount}" />
+
+            <TextBox Grid.Column="1"
+                     Text="{Binding State, Mode=OneWay}"
+                     Style="{StaticResource TextBox.Log}" />
+        </Grid>
+
+
     </Grid>
 </Window>

@@ -9,6 +9,11 @@
         mc:Ignorable="d"
         Title="Chat Server" Height="450" Width="400">
 
+    <Window.Resources>
+        <xaml:TextBoxEnterToClickBehavior x:Key="EnterToConnectServer" x:Shared="False"
+                                          Target="{Binding ElementName=cmdConnectServer}" />
+    </Window.Resources>
+    
     <Window.DataContext>
         <local:ChatServerViewModel />
     </Window.DataContext>
@@ -30,19 +35,18 @@
 
         <TextBox Grid.Row="0" Grid.Column="1"
                  Text="{Binding ServerUri, UpdateSourceTrigger=PropertyChanged}"
-                 IsEnabled="{Binding IsConnected, Converter={StaticResource BooleanNotConverter}}">
+                 IsEnabled="{Binding ChatConnectionState, Converter={StaticResource ConnectionStateToConnectEnability}}">
             <i:Interaction.Behaviors>
-                <!--<StaticResource ResourceKey="EnterToConnectServer" />-->
-                <xaml:TextBoxEnterToClickBehavior Target="{x:Reference cmdConnectServer}" />
+                <StaticResource ResourceKey="EnterToConnectServer" />
             </i:Interaction.Behaviors>
         </TextBox>
 
         <Button Grid.Row="0" Grid.Column="2" Content="Stop Service"
-                Visibility="{Binding IsConnected, Converter={StaticResource VisibilityConverter}}"
+                Visibility="{Binding ChatConnectionState, Converter={StaticResource ConnectionStateToDisconnectVisibility}}"
                 Command="{Binding StopServerCommand}" />
 
         <Button x:Name="cmdConnectServer" Grid.Row="0" Grid.Column="2" Content="Start Service"
-                Visibility="{Binding IsConnected, Converter={StaticResource InvisibilityConverter}}"
+                Visibility="{Binding ChatConnectionState, Converter={StaticResource ConnectionStateToConnectVisibility}}"
                 Command="{Binding StartServerAsyncCommand}" />
 
         <TextBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"

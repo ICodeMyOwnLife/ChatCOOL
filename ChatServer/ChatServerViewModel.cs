@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using ChatCommon;
@@ -18,33 +17,33 @@ namespace ChatServer
 
 
         #region  Properties & Indexers
-        public bool CanStartServer
-            => ConnectionState == ConnectionState.Closed && ChatConfig.IsValidServerUri(ServerUri);
+        public override bool CanConnect
+            => ChatConnectionState == ChatConnectionState.Closed && ChatConfig.IsValidServerUri(ServerUri);
 
-        public bool CanStopServer => ConnectionState == ConnectionState.Open;
+        public override bool CanDisconnect => ChatConnectionState == ChatConnectionState.Connected;
 
         public ICommand StartServerAsyncCommand
-            => GetCommand(ref _startServerAsyncCommand, async _ => await StartServerAsync(), _ => CanStartServer);
+            => GetCommand(ref _startServerAsyncCommand, async _ => await StartServerAsync(), _ => CanConnect);
 
-        public ICommand StopServerCommand => GetCommand(ref _stopServerCommand, _ => StopServer(), _ => CanStopServer);
+        public ICommand StopServerCommand => GetCommand(ref _stopServerCommand, _ => StopServer(), _ => CanDisconnect);
         #endregion
 
 
         #region Methods
         public async Task StartServerAsync()
         {
-            if (ConnectionState != ConnectionState.Closed)
+            if (ChatConnectionState != ChatConnectionState.Closed)
             {
-                Log($"Server is {ConnectionState.ToString().ToLower()}");
+                Log($"Server is {ChatConnectionState.ToString().ToLower()}");
                 return;
             }
 
             try
             {
                 Log("Starting server...");
-                ConnectionState = ConnectionState.Connecting;
+                ChatConnectionState = ChatConnectionState.Connecting;
                 await Task.Run(() => _signalR = WebApp.Start(ServerUri));
-                ConnectionState = ConnectionState.Open;
+                ChatConnectionState = ChatConnectionState.Connected;
                 Log($"Server is started at {ServerUri}.");
                 UpdateEnabilities();
             }
@@ -56,26 +55,17 @@ namespace ChatServer
 
         public void StopServer()
         {
-            if (ConnectionState != ConnectionState.Open)
+            if (ChatConnectionState != ChatConnectionState.Connected)
             {
-                Log($"Server is {ConnectionState.ToString().ToLower()}.");
+                Log($"Server is {ChatConnectionState.ToString().ToLower()}.");
                 return;
             }
 
             _signalR.Dispose();
             _signalR = null;
-            ConnectionState = ConnectionState.Closed;
+            ChatConnectionState = ChatConnectionState.Closed;
             UpdateEnabilities();
             Log("Server is stopped.");
-        }
-        #endregion
-
-
-        #region Override
-        protected override void UpdateEnabilities()
-        {
-            NotifyPropertyChanged(nameof(CanStartServer));
-            NotifyPropertyChanged(nameof(CanStopServer));
         }
         #endregion
     }

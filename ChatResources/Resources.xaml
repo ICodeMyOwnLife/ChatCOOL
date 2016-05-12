@@ -5,12 +5,12 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <Thickness x:Key="NormalMargin">8</Thickness>
-    
-    <xaml:GeneralValueConverter x:Key="ConnectionStateToTextEnabled">
+
+    <xaml:GeneralValueConverter x:Key="ConnectionStateToConnectEnability">
         <xaml:GeneralValueConverter.DefaultConvertResult>
             <sys:Boolean>False</sys:Boolean>
         </xaml:GeneralValueConverter.DefaultConvertResult>
-        
+
         <xaml:GeneralValueConverter.ConvertMapping>
             <xaml:GeneralDictionary>
                 <sys:Boolean x:Key="{x:Static chatCommon:ChatConnectionState.Closed}">True</sys:Boolean>
@@ -18,15 +18,51 @@
         </xaml:GeneralValueConverter.ConvertMapping>
     </xaml:GeneralValueConverter>
 
+    <xaml:GeneralValueConverter x:Key="ConnectionStateToSendMessageEnability">
+        <xaml:GeneralValueConverter.DefaultConvertResult>
+            <sys:Boolean>False</sys:Boolean>
+        </xaml:GeneralValueConverter.DefaultConvertResult>
+
+        <xaml:GeneralValueConverter.ConvertMapping>
+            <xaml:GeneralDictionary>
+                <sys:Boolean x:Key="{x:Static chatCommon:ChatConnectionState.Connected}">True</sys:Boolean>
+            </xaml:GeneralDictionary>
+        </xaml:GeneralValueConverter.ConvertMapping>
+    </xaml:GeneralValueConverter>
+
+    <xaml:GeneralValueConverter x:Key="ConnectionStateToConnectVisibility">
+        <xaml:GeneralValueConverter.DefaultConvertResult>
+            <Visibility>Visible</Visibility>
+        </xaml:GeneralValueConverter.DefaultConvertResult>
+
+        <xaml:GeneralValueConverter.ConvertMapping>
+            <xaml:GeneralDictionary>
+                <Visibility x:Key="{x:Static chatCommon:ChatConnectionState.Connected}">Hidden</Visibility>
+            </xaml:GeneralDictionary>
+        </xaml:GeneralValueConverter.ConvertMapping>
+    </xaml:GeneralValueConverter>
+
+    <xaml:GeneralValueConverter x:Key="ConnectionStateToDisconnectVisibility">
+        <xaml:GeneralValueConverter.DefaultConvertResult>
+            <Visibility>Hidden</Visibility>
+        </xaml:GeneralValueConverter.DefaultConvertResult>
+
+        <xaml:GeneralValueConverter.ConvertMapping>
+            <xaml:GeneralDictionary>
+                <Visibility x:Key="{x:Static chatCommon:ChatConnectionState.Connected}">Visible</Visibility>
+            </xaml:GeneralDictionary>
+        </xaml:GeneralValueConverter.ConvertMapping>
+    </xaml:GeneralValueConverter>
+
     <xaml:BooleanNotConverter x:Key="BooleanNotConverter" />
 
-    <xaml:BooleanToValueConverter x:Key="VisibilityConverter"
+    <!--<xaml:BooleanToValueConverter x:Key="VisibilityConverter"
                                   ValueIfTrue="{x:Static Visibility.Visible}"
                                   ValueIfFalse="{x:Static Visibility.Hidden}" />
 
     <xaml:BooleanToValueConverter x:Key="InvisibilityConverter"
                                   ValueIfFalse="{x:Static Visibility.Visible}"
-                                  ValueIfTrue="{x:Static Visibility.Hidden}" />
+                                  ValueIfTrue="{x:Static Visibility.Hidden}" />-->
 
     <xaml:ScrollWhenTextChangedBehavior x:Key="ScrollToEndBehavior" x:Shared="False" ScrollPosition="ScrollToEnd" />
 
@@ -34,6 +70,10 @@
         <Setter Property="Margin" Value="{StaticResource NormalMargin}" />
         <Setter Property="Padding" Value="12,0,12,0" />
         <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style TargetType="ListBox">
+        <Setter Property="Margin" Value="{StaticResource NormalMargin}" />
     </Style>
 
     <Style x:Key="TextBlock.Label" TargetType="TextBlock">

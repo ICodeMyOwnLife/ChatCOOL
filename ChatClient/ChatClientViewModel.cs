@@ -15,6 +15,7 @@ namespace ChatClient
         private ChatAccount[] _accounts;
         private string _clientId;
         private ICommand _connectServerAsyncCommand;
+        private string _dialog;
         private ICommand _disconnectServerCommand;
         private HubConnection _hubConnection;
         private IHubProxy _hubProxy;
@@ -39,10 +40,18 @@ namespace ChatClient
         public override bool CanDisconnect => ChatConnectionState == ChatConnectionState.Connected;
 
         public bool CanSendMessage
-            => !string.IsNullOrEmpty(Message) && SelectedAccount != null && ChatConnectionState == ChatConnectionState.Connected;
+            =>
+                !string.IsNullOrEmpty(Message) && SelectedAccount != null &&
+                ChatConnectionState == ChatConnectionState.Connected;
 
         public ICommand ConnectServerAsyncCommand
             => GetCommand(ref _connectServerAsyncCommand, async _ => await ConnectServerAsync(), _ => CanConnect);
+
+        public string Dialog
+        {
+            get { return _dialog; }
+            private set { SetProperty(ref _dialog, value); }
+        }
 
         public ICommand DisconnectServerCommand
             => GetCommand(ref _disconnectServerCommand, _ => DisconnectServer(), _ => CanDisconnect);
@@ -172,16 +181,32 @@ namespace ChatClient
 
 
         #region Implementation
+        private void AddDialog(string userName, string message)
+        {
+            var s = $"{userName}: {message}";
+            Dialog = string.IsNullOrEmpty(Dialog) ? s : Dialog + Environment.NewLine + s;
+        }
+
         private void InitializeConnection()
         {
             _hubConnection = new HubConnection(ServerUri);
             _hubConnection.StateChanged += HubConnection_StateChanged;
             _hubConnection.Error += HubConnection_Error;
             _hubProxy = _hubConnection.CreateHubProxy("ChatHub");
-            _hubProxy.On<string, string>("ShowMessage", (userName, message) => Log($"{userName}: {message}"));
-            _hubProxy.On<string>("ReceiveId", id => _clientId = id);
+            _hubProxy.On<string, string>("ShowMessage", AddDialog);
+            _hubProxy.On<string>("ReceiveId", id =>
+            {
+                _clientId = id;
+                SetAccounts(Accounts, id);
+            });
             _hubProxy.On<IEnumerable<ChatAccount>>("ReceiveAccounts",
-                accounts => Accounts = accounts.Where(a => a.Id != _clientId).ToArray());
+                accounts => SetAccounts(accounts, _clientId));
+        }
+
+        private void SetAccounts(IEnumerable<ChatAccount> accounts, string clientId)
+        {
+            Accounts = string.IsNullOrEmpty(clientId) || accounts == null
+                           ? null : accounts.Where(a => a.Id != clientId).ToArray();
         }
         #endregion
     }
@@ -189,9 +214,10 @@ namespace ChatClient
 
 
 // TODO: Test CanConnectServer, CanSendMessage
-// TODO: EnterToClick
-// TODO: Log Connection success, Connection closed
-// TODO: Chat with specific user?
-// TODO: Delete Message after sending
-// TODO: Remove account when disconnected
-// TODO: Account.Except(thisAccount)
+// TODO: Test EnterToClick
+// TODO: Test Log Connection success, Connection closed
+// TODO: Test Chat with specific user?
+// TODO: Test Delete Message after sending
+// TODO: Test Remove account when disconnected/closed
+// TODO: Test Account.Except(thisAccount)
+// TODO: Disconnect when Closed

@@ -52,13 +52,14 @@ namespace ChatServer
         #region Override
         public override Task OnConnected()
         {
-            _logger?.Log($"Client connected: {Context.ConnectionId}");
+            LogConnection();
             return base.OnConnected();
         }
 
         public override Task OnDisconnected(bool stopCalled)
         {
-            _logger?.Log($"Client disconnected: {Context.ConnectionId}");
+            LogDisconnection();
+            RemoveAccount(Context.ConnectionId);
             return base.OnDisconnected(stopCalled);
         }
 
@@ -71,6 +72,21 @@ namespace ChatServer
 
 
         #region Implementation
+        private void LogConnection()
+        {
+            _logger?.Log($"Client connected: {Context.ConnectionId}");
+        }
+
+        private void LogDisconnection()
+        {
+            _logger?.Log($"Client disconnected: {Context.ConnectionId}");
+        }
+
+        private static void RemoveAccount(string clientId)
+        {
+            _accounts.Remove(_accounts.FirstOrDefault(a => a.Id == clientId));
+        }
+
         private void SendAccounts()
         {
             Clients.All.ReceiveAccounts(_accounts);
@@ -85,4 +101,4 @@ namespace ChatServer
 }
 
 
-// TODO: Log OnConnected & OnDisconnected...
+// TODO: Test Log OnConnected & OnDisconnected...

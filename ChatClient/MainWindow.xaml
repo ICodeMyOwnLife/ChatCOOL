@@ -7,7 +7,7 @@
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:xaml="http://wpf.cb.com/xaml"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="550" Width="525">
 
     <Window.Resources>
         <xaml:TextBoxEnterToClickBehavior x:Key="EnterToConnect" x:Shared="False"
@@ -20,6 +20,12 @@
     <Window.DataContext>
         <local:ChatClientViewModel />
     </Window.DataContext>
+
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closed">
+            <i:InvokeCommandAction Command="{Binding DisconnectServerCommand}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -80,16 +86,28 @@
                 Command="{Binding SendMessageAsyncCommand}" />
 
         <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
 
-            <ListBox Grid.Column="0" DisplayMemberPath="UserName"
+            <ListBox Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
+                     MinWidth="100"
+                     DisplayMemberPath="UserName"
                      ItemsSource="{Binding Accounts}"
                      SelectedItem="{Binding SelectedAccount}" />
 
-            <TextBox Grid.Column="1"
+            <TextBox Grid.Row="0" Grid.Column="1"
+                     Text="{Binding Dialog, Mode=OneWay}"
+                     Style="{StaticResource TextBox.Log}" />
+
+            <TextBox Grid.Row="1" Grid.Column="1"
+                     Height="90"
                      Text="{Binding State, Mode=OneWay}"
                      Style="{StaticResource TextBox.Log}" />
         </Grid>

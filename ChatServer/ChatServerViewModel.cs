@@ -72,4 +72,4 @@ namespace ChatServer
 }
 
 
-// TODO: Validate ServerUri, CanStartServer = false if valilation failed
+// TODO: Add validation for ServerUri

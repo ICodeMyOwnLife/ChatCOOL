@@ -91,6 +91,10 @@
       <Project>{3C46F9A4-7A8B-4588-872F-60B36E471FC5}</Project>
       <Name>CB.Xaml.ValueConverters</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ChatCommon\ChatCommon.csproj">
+      <Project>{AE4EA5B2-5D79-489B-95D3-EB2902EB5523}</Project>
+      <Name>ChatCommon</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,8 +1,22 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:xaml="http://wpf.cb.com/xaml">
+                    xmlns:xaml="http://wpf.cb.com/xaml"
+                    xmlns:chatCommon="clr-namespace:ChatCommon;assembly=ChatCommon"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <Thickness x:Key="NormalMargin">8</Thickness>
+    
+    <xaml:GeneralValueConverter x:Key="ConnectionStateToTextEnabled">
+        <xaml:GeneralValueConverter.DefaultConvertResult>
+            <sys:Boolean>False</sys:Boolean>
+        </xaml:GeneralValueConverter.DefaultConvertResult>
+        
+        <xaml:GeneralValueConverter.ConvertMapping>
+            <xaml:GeneralDictionary>
+                <sys:Boolean x:Key="{x:Static chatCommon:ChatConnectionState.Closed}">True</sys:Boolean>
+            </xaml:GeneralDictionary>
+        </xaml:GeneralValueConverter.ConvertMapping>
+    </xaml:GeneralValueConverter>
 
     <xaml:BooleanNotConverter x:Key="BooleanNotConverter" />
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using ChatCommon;
@@ -12,40 +13,39 @@ namespace ChatServer
         #region Fields
         private IDisposable _signalR;
         private ICommand _startServerAsyncCommand;
-        private ICommand _startServerCommand;
         private ICommand _stopServerCommand;
         #endregion
 
 
         #region  Properties & Indexers
-        public bool CanStartServer => !IsConnected && ChatConfig.IsValidServerUri(ServerUri);
-        public bool CanStopServer => IsConnected;
+        public bool CanStartServer
+            => ConnectionState == ConnectionState.Closed && ChatConfig.IsValidServerUri(ServerUri);
+
+        public bool CanStopServer => ConnectionState == ConnectionState.Open;
 
         public ICommand StartServerAsyncCommand
             => GetCommand(ref _startServerAsyncCommand, async _ => await StartServerAsync(), _ => CanStartServer);
-
-        public ICommand StartServerCommand
-            => GetCommand(ref _startServerCommand, _ => StartServer(), _ => CanStartServer);
 
         public ICommand StopServerCommand => GetCommand(ref _stopServerCommand, _ => StopServer(), _ => CanStopServer);
         #endregion
 
 
         #region Methods
-        public void StartServer()
+        public async Task StartServerAsync()
         {
-            if (IsConnected)
+            if (ConnectionState != ConnectionState.Closed)
             {
-                Log("Server is running");
+                Log($"Server is {ConnectionState.ToString().ToLower()}");
                 return;
             }
 
             try
             {
                 Log("Starting server...");
-                _signalR = WebApp.Start(ServerUri);
+                ConnectionState = ConnectionState.Connecting;
+                await Task.Run(() => _signalR = WebApp.Start(ServerUri));
+                ConnectionState = ConnectionState.Open;
                 Log($"Server is started at {ServerUri}.");
-                IsConnected = true;
                 UpdateEnabilities();
             }
             catch (Exception exception)
@@ -54,19 +54,17 @@ namespace ChatServer
             }
         }
 
-        public async Task StartServerAsync() => await Task.Run(() => StartServer());
-
         public void StopServer()
         {
-            if (!IsConnected)
+            if (ConnectionState != ConnectionState.Open)
             {
-                Log("Server is not running.");
+                Log($"Server is {ConnectionState.ToString().ToLower()}.");
                 return;
             }
 
             _signalR.Dispose();
             _signalR = null;
-            IsConnected = false;
+            ConnectionState = ConnectionState.Closed;
             UpdateEnabilities();
             Log("Server is stopped.");
         }

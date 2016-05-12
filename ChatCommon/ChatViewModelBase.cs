@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using CB.Model.Common;
 
 
@@ -7,7 +8,9 @@ namespace ChatCommon
     public abstract class ChatViewModelBase: ViewModelBase, ILog
     {
         #region Fields
-        private bool _isConnected;
+        private bool _canConnect = true;
+        private bool _canDisconnect;
+        private ChatConnectionState _connectionState;
         private string _serverUri = ChatConfig.ChatServerUri;
         #endregion
 
@@ -18,10 +21,22 @@ namespace ChatCommon
 
 
         #region  Properties & Indexers
-        public virtual bool IsConnected
+        public bool CanConnect
         {
-            get { return _isConnected; }
-            protected set { SetProperty(ref _isConnected, value); }
+            get { return _canConnect; }
+            protected set { SetProperty(ref _canConnect, value); }
+        }
+
+        public bool CanDisconnect
+        {
+            get { return _canDisconnect; }
+            protected set { SetProperty(ref _canDisconnect, value); }
+        }
+
+        public virtual ChatConnectionState ConnectionState
+        {
+            get { return _connectionState; }
+            protected set { SetProperty(ref _connectionState, value); }
         }
 
         public virtual string ServerUri

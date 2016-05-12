@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChatConfig.cs" />
+    <Compile Include="ChatConnectionState.cs" />
     <Compile Include="ChatViewModelBase.cs" />
     <Compile Include="ILog.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

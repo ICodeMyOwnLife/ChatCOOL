@@ -28,23 +28,20 @@ namespace ChatServer
         public void LogIn(string userName)
         {
             var clientId = Context.ConnectionId;
-            var account = _accounts.SingleOrDefault(a => a.Id == clientId);
-            if (account == null)
-            {
-                _accounts.Add(new ChatAccount { Id = clientId, UserName = userName });
-            }
-            else
-            {
-                account.UserName = userName;
-            }
-            SendId(clientId);
-            SendAccounts();
+            Clients.Client(clientId).SetAccounts(_accounts);
+
+            var newAccount = new ChatAccount { Id = clientId, Name = userName };
+            Clients.AllExcept(clientId).AddAccount(newAccount);
+            //Clients.Client(clientId).ReceiveId(clientId);
+            AddAccount(newAccount);
+
+            //SendAccounts();
         }
 
-        public void SendMessage(string receiveId, string message)
+        public void SendMessage(string receiverId, string message)
         {
-            var sendName = _accounts.SingleOrDefault(a => a.Id == Context.ConnectionId)?.UserName;
-            Clients.Client(receiveId).ShowMessage(sendName, message);
+            var senderId = Context.ConnectionId;
+            Clients.Client(receiverId).ShowMessage(senderId, message);
         }
         #endregion
 
@@ -52,14 +49,18 @@ namespace ChatServer
         #region Override
         public override Task OnConnected()
         {
-            LogConnection();
+            LogConnection(Context.ConnectionId);
             return base.OnConnected();
         }
 
         public override Task OnDisconnected(bool stopCalled)
         {
-            LogDisconnection();
+            var clientId = Context.ConnectionId;
+            LogDisconnection(clientId);
+            Clients.AllExcept(clientId).RemoveAccount(clientId);
             RemoveAccount(Context.ConnectionId);
+
+            //SendAccounts();
             return base.OnDisconnected(stopCalled);
         }
 
@@ -72,31 +73,40 @@ namespace ChatServer
 
 
         #region Implementation
-        private void LogConnection()
+        private static void AddAccount(ChatAccount newAccount)
         {
-            _logger?.Log($"Client connected: {Context.ConnectionId}");
+            var account = _accounts.SingleOrDefault(a => a.Id == newAccount.Id);
+            if (account == null)
+            {
+                _accounts.Add(newAccount);
+            }
+            else
+            {
+                account.Name = newAccount.Name;
+            }
         }
 
-        private void LogDisconnection()
+        private void LogConnection(string clientId)
         {
-            _logger?.Log($"Client disconnected: {Context.ConnectionId}");
+            _logger?.Log($"Client connected: {clientId}");
+        }
+
+        private void LogDisconnection(string clientId)
+        {
+            _logger?.Log($"Client disconnected: {clientId}");
         }
 
         private static void RemoveAccount(string clientId)
         {
             _accounts.Remove(_accounts.FirstOrDefault(a => a.Id == clientId));
         }
+        #endregion
 
-        private void SendAccounts()
+
+        /*private void SendAccounts()
         {
             Clients.All.ReceiveAccounts(_accounts);
-        }
-
-        private void SendId(string clientId)
-        {
-            Clients.Client(clientId).ReceiveId(clientId);
-        }
-        #endregion
+        }*/
     }
 }
 

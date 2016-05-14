@@ -1,9 +1,9 @@
 ﻿namespace ChatServer
 {
-    public partial class MainWindow
+    public partial class ChatServerWindow
     {
         #region  Constructors & Destructor
-        public MainWindow()
+        public ChatServerWindow()
         {
             InitializeComponent();
         }

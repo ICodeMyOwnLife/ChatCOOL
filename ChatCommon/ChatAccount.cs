@@ -4,7 +4,15 @@
     {
         #region  Properties & Indexers
         public string Id { get; set; }
-        public string UserName { get; set; }
+        public string Name { get; set; }
+        #endregion
+
+
+        #region Override
+        public override string ToString()
+        {
+            return $"Id: {Id} - Name: {Name}";
+        }
         #endregion
     }
 }

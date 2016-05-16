@@ -1,4 +1,4 @@
-﻿<Window x:Class="ChatServer.MainWindow"
+﻿<Window x:Class="ChatServer.ChatServerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,7 +7,7 @@
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:xaml="http://wpf.cb.com/xaml"
         mc:Ignorable="d"
-        Title="Chat Server" Height="450" Width="400">
+        Title="Chat Server" Height="180" Width="400">
 
     <Window.Resources>
         <xaml:TextBoxEnterToClickBehavior x:Key="EnterToConnectServer" x:Shared="False"
@@ -51,6 +51,6 @@
 
         <TextBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
                  Text="{Binding State, Mode=OneWay}"
-                 Style="{StaticResource TextBox.Log}" />
+                 Style="{StaticResource TextBox.Append}" />
     </Grid>
 </Window>

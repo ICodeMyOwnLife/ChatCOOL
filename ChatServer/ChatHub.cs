@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using System.Windows;
 using ChatCommon;
@@ -11,7 +10,9 @@ namespace ChatServer
     public class ChatHub: Hub
     {
         #region Fields
-        private static readonly IList<ChatAccount> _accounts = new List<ChatAccount>();
+        private static readonly ConcurrentDictionary<string, string> _idNameDictionary =
+            new ConcurrentDictionary<string, string>();
+
         private ILog _logger;
         #endregion
 
@@ -27,23 +28,16 @@ namespace ChatServer
         #region Methods
         public void LogIn(string userName)
         {
-            var clientId = Context.ConnectionId;
-            var account = _accounts.SingleOrDefault(a => a.Id == clientId);
-            if (account == null)
-            {
-                _accounts.Add(new ChatAccount { Id = clientId, UserName = userName });
-            }
-            else
-            {
-                account.UserName = userName;
-            }
-            SendId(clientId);
+            var userId = Context.ConnectionId;
+            _idNameDictionary[userId] = userName;
+
+            //SendId(userId);
             SendAccounts();
         }
 
         public void SendMessage(string receiveId, string message)
         {
-            var sendName = _accounts.SingleOrDefault(a => a.Id == Context.ConnectionId)?.UserName;
+            var sendName = _idNameDictionary[Context.ConnectionId];
             Clients.Client(receiveId).ShowMessage(sendName, message);
         }
         #endregion
@@ -84,18 +78,20 @@ namespace ChatServer
 
         private static void RemoveAccount(string clientId)
         {
-            _accounts.Remove(_accounts.FirstOrDefault(a => a.Id == clientId));
+            //_idNameDictionary.Remove(_idNameDictionary.FirstOrDefault(a => a.Id == clientId));
+            string userName;
+            _idNameDictionary.TryRemove(clientId, out userName);
         }
 
         private void SendAccounts()
         {
-            Clients.All.ReceiveAccounts(_accounts);
+            Clients.All.ReceiveAccounts(_idNameDictionary);
         }
 
-        private void SendId(string clientId)
+        /*private void SendId(string clientId)
         {
             Clients.Client(clientId).ReceiveId(clientId);
-        }
+        }*/
         #endregion
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using ChatCommon;
@@ -28,17 +29,19 @@ namespace ChatServer
         #region Methods
         public void LogIn(string userName)
         {
-            var userId = Context.ConnectionId;
-            _idNameDictionary[userId] = userName;
+            var clientId = Context.ConnectionId;
+            Clients.Client(clientId).SetAccounts(
+                _idNameDictionary.Select(p => new ChatAccount { Id = p.Key, Name = p.Value }));
 
-            //SendId(userId);
-            SendAccounts();
+            var newAccount = new ChatAccount { Id = clientId, Name = userName };
+            Clients.AllExcept(clientId).AddAccount(newAccount);
+            AddAccount(newAccount);
         }
 
-        public void SendMessage(string receiveId, string message)
+        public void SendMessage(string receiverId, string message)
         {
-            var sendName = _idNameDictionary[Context.ConnectionId];
-            Clients.Client(receiveId).ShowMessage(sendName, message);
+            var senderId = Context.ConnectionId;
+            Clients.Client(receiverId).ShowMessage(senderId, message);
         }
         #endregion
 
@@ -46,13 +49,15 @@ namespace ChatServer
         #region Override
         public override Task OnConnected()
         {
-            LogConnection();
+            LogConnection(Context.ConnectionId);
             return base.OnConnected();
         }
 
         public override Task OnDisconnected(bool stopCalled)
         {
-            LogDisconnection();
+            var clientId = Context.ConnectionId;
+            LogDisconnection(clientId);
+            Clients.AllExcept(clientId).RemoveAccount(clientId);
             RemoveAccount(Context.ConnectionId);
             return base.OnDisconnected(stopCalled);
         }
@@ -66,32 +71,26 @@ namespace ChatServer
 
 
         #region Implementation
-        private void LogConnection()
+        private static void AddAccount(ChatAccount newAccount)
         {
-            _logger?.Log($"Client connected: {Context.ConnectionId}");
+            _idNameDictionary.AddOrUpdate(newAccount.Id, id => newAccount.Name, (id, name) => newAccount.Name);
         }
 
-        private void LogDisconnection()
+        private void LogConnection(string clientId)
         {
-            _logger?.Log($"Client disconnected: {Context.ConnectionId}");
+            _logger?.Log($"Client connected: {clientId}");
+        }
+
+        private void LogDisconnection(string clientId)
+        {
+            _logger?.Log($"Client disconnected: {clientId}");
         }
 
         private static void RemoveAccount(string clientId)
         {
-            //_idNameDictionary.Remove(_idNameDictionary.FirstOrDefault(a => a.Id == clientId));
             string userName;
             _idNameDictionary.TryRemove(clientId, out userName);
         }
-
-        private void SendAccounts()
-        {
-            Clients.All.ReceiveAccounts(_idNameDictionary);
-        }
-
-        /*private void SendId(string clientId)
-        {
-            Clients.Client(clientId).ReceiveId(clientId);
-        }*/
         #endregion
     }
 }

@@ -219,12 +219,6 @@ namespace ChatClient
             _hubConnection.Error += HubConnection_Error;
             _hubProxy = _hubConnection.CreateHubProxy("ChatHub");
             _hubProxy.On<string, string>("ShowMessage", ShowDialog);
-            /*_hubProxy.On<string>("ReceiveId", id =>
-            {
-                _clientId = id;
-                UpdateDialogs();
-            });*/
-            /*_hubProxy.On<IEnumerable<ChatAccount>>("ReceiveAccounts", UpdateDialogs);*/
             _hubProxy.On<ChatAccount>("AddAccount", AddDialogOnUiThread);
             _hubProxy.On<string>("RemoveAccount", RemoveDialogOnUiThread);
             _hubProxy.On<IEnumerable<ChatAccount>>("SetAccounts", FillDialogsOnUiThread);
@@ -246,16 +240,6 @@ namespace ChatClient
             SelectedDialog?.AddMessage(message);
         }
         #endregion
-
-
-        /*private void UpdateDialogs(IEnumerable<ChatAccount> accounts)
-        {
-            var accountList = accounts as List<ChatAccount> ?? accounts.ToList();
-
-            Log($"SetAccounts for {_clientId}:\r\n\t{string.Join("\r\n\t", accountList)}");
-
-            accountList.ForEach(a => { if (Dialogs.All(d => d.Account.Id != a.Id))  });
-        }*/
     }
 }
 

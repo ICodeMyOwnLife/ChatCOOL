@@ -34,7 +34,7 @@ namespace ChatServer
                 _idNameDictionary.Select(p => new ChatAccount { Id = p.Key, Name = p.Value }));
 
             var newAccount = new ChatAccount { Id = clientId, Name = userName };
-            Clients.AllExcept(clientId).AddAccount(newAccount);
+            Clients.Others.AddAccount(newAccount);
             AddAccount(newAccount);
         }
 
